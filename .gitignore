@@ -1,4 +1,5 @@
 .env
+.htaccess
 .htpasswd
 files/*
 public_html/users/*

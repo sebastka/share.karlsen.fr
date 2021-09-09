@@ -5,3 +5,4 @@ files/*
 public_html/users/*
 public_html/*
 !public_html/users/
+!*index.html

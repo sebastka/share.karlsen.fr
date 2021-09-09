@@ -41,7 +41,6 @@ function main() {
 	fi
 
 	# Create empty .htpasswd if none is found
-	mkdir -p files public_html/users
 	[[ ! -f .htpasswd ]] && echo "Creating empty .htpasswd..." && touch .htpasswd
 
 	# Does admin exist?
@@ -77,6 +76,9 @@ function create_admin() {
 		htpasswd -b .htpasswd "${CONFIG_ADMIN}" "${CONFIG_ADMIN_PW}"
 		mkdir -p "public_html/users/${CONFIG_ADMIN}/"
 		echo -e "AuthType Basic\nAuthName \"Restricted area!\"\nAuthBasicProvider file\nAuthUserFile $(pwd)/.htpasswd\nRequire user ${CONFIG_ADMIN}" > "public_html/users/${CONFIG_ADMIN}/.htaccess"
+
+		# Give admin access to all files
+		mkdir -p files
 		ln -s ../../../files "public_html/users/${CONFIG_ADMIN}/files"
 
 		# Restrict /

@@ -1,0 +1,121 @@
+#!/bin/bash
+set -e
+#set -x
+
+#######################################
+#	Add new user
+#		mkuser username
+#
+#	Arguments:
+#		username (string): new user's name
+#	Outputs:
+#		None
+#	Returns:
+#		0 upon success
+#		>=1 upon error
+#######################################
+function main() {
+	local readonly USAGE="Usage: mkuser username"
+
+	if [[ "${#}" -ne 1 ]]; then
+		err "Error: one argument expected, ${#} received"
+		err "${USAGE}"
+		return 1
+	fi
+
+	local readonly username="${1}"
+
+	# No .env file
+	if [[ ! -f .env ]]; then
+		err "Error: Please configure .env"
+		return 2
+	fi
+
+	# Load .env
+	set -o allexport && source .env && set +o allexport
+
+	# Empty env vars
+	if [[ -z "${CONFIG_ADMIN}" ]] || [[ -z "${CONFIG_ADMIN_PW}" ]]; then
+		err "Error: Please configure .env"
+		return 3
+	fi
+
+	# Create empty .htpasswd if none is found
+	[[ ! -f .htpasswd ]] && echo "Creating empty .htpasswd..." && touch .htpasswd
+
+	# Does admin exist?
+	create_admin
+
+	# Create user
+	create_user "${username}"
+
+	return 0
+}
+
+#######################################
+#	Check if user exists
+#######################################
+function user_exists() {
+	[[ "${#}" -ne 1 ]] && err "Error: user_exists(): one argument expected, ${#} received"
+	local readonly username="${1}"
+
+	if grep -q "${username}" .htpasswd && [[ -d "public_html/users/${username}/" ]]; then
+		return 0
+	fi
+
+	return 1
+}
+
+#######################################
+#	Create admin
+#######################################
+function create_admin() {
+	if ! user_exists "${CONFIG_ADMIN}"; then
+		echo "Creating admin user '${CONFIG_ADMIN}'..."
+
+		htpasswd -b .htpasswd "${CONFIG_ADMIN}" "${CONFIG_ADMIN_PW}"
+		mkdir -p "public_html/users/${CONFIG_ADMIN}/"
+		echo -e "AuthType Basic\nAuthName \"Restricted area!\"\nAuthBasicProvider file\nAuthUserFile ../../../.htpasswd\nRequire user ${CONFIG_ADMIN}" > "public_html/users/${CONFIG_ADMIN}/.htaccess"
+		ln -s ../../../files "public_html/users/${CONFIG_ADMIN}/files"
+	fi
+
+	return 0
+}
+
+#######################################
+#	Create user
+#######################################
+function create_user() {
+	[[ "${#}" -ne 1 ]] && err "Error: create_user(): one argument expected, ${#} received"
+	local readonly username="${1}"
+	
+	if ! user_exists "${username}"; then
+		echo "Creating user '${username}'..."
+
+		htpasswd .htpasswd "${username}"
+		mkdir -p "public_html/users/${username}/"
+		echo -e "AuthType Basic\nAuthName \"Restricted area!\"\nAuthBasicProvider file\nAuthUserFile ../../../.htpasswd\nRequire user ${CONFIG_ADMIN} ${username}" > "public_html/users/${username}/.htaccess"
+	else
+		echo "User '${username}' already exists"
+		return 1
+	fi
+
+	return 0
+}
+
+#######################################
+#	Print error message to stderr
+#	https://google.github.io/styleguide/shellguide.html
+#
+#	Arguments:
+#		string to print to stderr
+#	Outputs:
+#		Error message to stderr
+#	Returns:
+#		None
+#######################################
+function err() {
+	echo [2021-09-01T08:21:26+0000]: "${*}" >&2
+}
+
+main "${@}"; exit

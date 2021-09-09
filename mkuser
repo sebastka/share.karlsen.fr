@@ -74,13 +74,13 @@ function create_admin() {
 	if ! user_exists "${CONFIG_ADMIN}"; then
 		echo "Creating admin user '${CONFIG_ADMIN}'..."
 
-		# Restrict /
-		echo -e "AuthType Basic\nAuthName \"Restricted area!\"\nAuthBasicProvider file\nAuthUserFile .htpasswd\nRequire user ${CONFIG_ADMIN}" > .htaccess
-
 		htpasswd -b .htpasswd "${CONFIG_ADMIN}" "${CONFIG_ADMIN_PW}"
 		mkdir -p "public_html/users/${CONFIG_ADMIN}/"
 		echo -e "AuthType Basic\nAuthName \"Restricted area!\"\nAuthBasicProvider file\nAuthUserFile ../../../.htpasswd\nRequire user ${CONFIG_ADMIN}" > "public_html/users/${CONFIG_ADMIN}/.htaccess"
 		ln -s ../../../files "public_html/users/${CONFIG_ADMIN}/files"
+
+		# Restrict /
+		echo -e "AuthType Basic\nAuthName \"Restricted area!\"\nAuthBasicProvider file\nAuthUserFile ../.htpasswd\nRequire user ${CONFIG_ADMIN}" > public_html/.htaccess
 	fi
 
 	return 0

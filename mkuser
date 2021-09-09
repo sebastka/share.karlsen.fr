@@ -76,11 +76,11 @@ function create_admin() {
 
 		htpasswd -b .htpasswd "${CONFIG_ADMIN}" "${CONFIG_ADMIN_PW}"
 		mkdir -p "public_html/users/${CONFIG_ADMIN}/"
-		echo -e "AuthType Basic\nAuthName \"Restricted area!\"\nAuthBasicProvider file\nAuthUserFile ../../../.htpasswd\nRequire user ${CONFIG_ADMIN}" > "public_html/users/${CONFIG_ADMIN}/.htaccess"
+		echo -e "AuthType Basic\nAuthName \"Restricted area!\"\nAuthBasicProvider file\nAuthUserFile $(pwd)/.htpasswd\nRequire user ${CONFIG_ADMIN}" > "public_html/users/${CONFIG_ADMIN}/.htaccess"
 		ln -s ../../../files "public_html/users/${CONFIG_ADMIN}/files"
 
 		# Restrict /
-		echo -e "AuthType Basic\nAuthName \"Restricted area!\"\nAuthBasicProvider file\nAuthUserFile ../.htpasswd\nRequire user ${CONFIG_ADMIN}" > public_html/.htaccess
+		echo -e "AuthType Basic\nAuthName \"Restricted area!\"\nAuthBasicProvider file\nAuthUserFile $(pwd)/.htpasswd\nRequire user ${CONFIG_ADMIN}" > public_html/.htaccess
 	fi
 
 	return 0
@@ -98,7 +98,7 @@ function create_user() {
 
 		htpasswd .htpasswd "${username}"
 		mkdir -p "public_html/users/${username}/"
-		echo -e "AuthType Basic\nAuthName \"Restricted area!\"\nAuthBasicProvider file\nAuthUserFile ../../../.htpasswd\nRequire user ${CONFIG_ADMIN} ${username}" > "public_html/users/${username}/.htaccess"
+		echo -e "AuthType Basic\nAuthName \"Restricted area!\"\nAuthBasicProvider file\nAuthUserFile $(pwd)/.htpasswd\nRequire user ${CONFIG_ADMIN} ${username}" > "public_html/users/${username}/.htaccess"
 	else
 		echo "User '${username}' already exists"
 		return 1

@@ -41,6 +41,7 @@ function main() {
 	fi
 
 	# Create empty .htpasswd if none is found
+	mkdir -p files public_html/users
 	[[ ! -f .htpasswd ]] && echo "Creating empty .htpasswd..." && touch .htpasswd
 
 	# Does admin exist?

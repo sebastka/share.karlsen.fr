@@ -58,7 +58,7 @@ function user_exists() {
 	[[ "${#}" -ne 1 ]] && err "Error: user_exists(): one argument expected, ${#} received"
 	local readonly username="${1}"
 
-	if grep -q "${username}" "passwd/${username}" && [[ -d "public_html/${username}/" ]]; then
+	if grep -q "${username}" "passwd/${username}" &>/dev/null && [[ -d "public_html/${username}/" ]]; then
 		return 0
 	fi
 

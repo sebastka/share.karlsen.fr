@@ -40,10 +40,9 @@ function main() {
 		return 3
 	fi
 
-	# Create empty .htpasswd if none is found
-	[[ ! -f .htpasswd ]] && echo "Creating empty .htpasswd..." && touch .htpasswd
+	mkdir -p passwd
 
-	# Does admin exist?
+	# Does admin exist
 	create_admin
 
 	# Create user
@@ -59,7 +58,7 @@ function user_exists() {
 	[[ "${#}" -ne 1 ]] && err "Error: user_exists(): one argument expected, ${#} received"
 	local readonly username="${1}"
 
-	if grep -q "${username}" .htpasswd && [[ -d "public_html/users/${username}/" ]]; then
+	if grep -q "${username}" "passwd/${username}" && [[ -d "public_html/${username}/" ]]; then
 		return 0
 	fi
 
@@ -73,16 +72,15 @@ function create_admin() {
 	if ! user_exists "${CONFIG_ADMIN}"; then
 		echo "Creating admin user '${CONFIG_ADMIN}'..."
 
-		htpasswd -b .htpasswd "${CONFIG_ADMIN}" "${CONFIG_ADMIN_PW}"
-		mkdir -p "public_html/users/${CONFIG_ADMIN}/"
-		echo -e "AuthType Basic\nAuthName \"Restricted area!\"\nAuthBasicProvider file\nAuthUserFile $(pwd)/.htpasswd\nRequire user ${CONFIG_ADMIN}" > "public_html/users/${CONFIG_ADMIN}/.htaccess"
+		htpasswd -b "passwd/${CONFIG_ADMIN}" "${CONFIG_ADMIN}" "${CONFIG_ADMIN_PW}"
+		mkdir -p "public_html/${CONFIG_ADMIN}/"
 
 		# Give admin access to all files
 		mkdir -p files
-		ln -s ../../../files "public_html/users/${CONFIG_ADMIN}/files"
+		ln -s ../../files "public_html/${CONFIG_ADMIN}/files"
 
-		# Restrict /
-		echo -e "AuthType Basic\nAuthName \"Restricted area!\"\nAuthBasicProvider file\nAuthUserFile $(pwd)/.htpasswd\nRequire user ${CONFIG_ADMIN}" > public_html/.htaccess
+		echo -e "Copy the following in the Nginx config file:\n"
+		echo -e "location /${CONFIG_ADMIN} {\n\tauth_basic \"Restricted area\";\n\tauth_basic_user_file /var/www/share.karlsen.fr/passwd/${CONFIG_ADMIN};\n}\n"
 	fi
 
 	return 0
@@ -98,9 +96,11 @@ function create_user() {
 	if ! user_exists "${username}"; then
 		echo "Creating user '${username}'..."
 
-		htpasswd .htpasswd "${username}"
-		mkdir -p "public_html/users/${username}/"
-		echo -e "AuthType Basic\nAuthName \"Restricted area!\"\nAuthBasicProvider file\nAuthUserFile $(pwd)/.htpasswd\nRequire user ${CONFIG_ADMIN} ${username}" > "public_html/users/${username}/.htaccess"
+		htpasswd "passwd/${username}" "${username}"
+		mkdir -p "public_html/${username}/"
+
+		echo -e "Copy the following in the Nginx config file:\n"
+		echo -e "location /${username} {\n\tauth_basic \"Restricted area\";\n\tauth_basic_user_file /var/www/share.karlsen.fr/passwd/${username};\n}\n"
 	else
 		echo "User '${username}' already exists"
 		return 1

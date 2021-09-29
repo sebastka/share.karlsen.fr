@@ -72,7 +72,7 @@ function create_admin() {
 	if ! user_exists "${CONFIG_ADMIN}"; then
 		echo "Creating admin user '${CONFIG_ADMIN}'..."
 
-		htpasswd -b "passwd/${CONFIG_ADMIN}" "${CONFIG_ADMIN}" "${CONFIG_ADMIN_PW}"
+		htpasswd -c -b "passwd/${CONFIG_ADMIN}" "${CONFIG_ADMIN}" "${CONFIG_ADMIN_PW}"
 		mkdir -p "public_html/${CONFIG_ADMIN}/"
 
 		# Give admin access to all files
@@ -92,10 +92,11 @@ function create_admin() {
 function create_user() {
 	[[ "${#}" -ne 1 ]] && err "Error: create_user(): one argument expected, ${#} received"
 	local readonly username="${1}"
-	
+
 	if ! user_exists "${username}"; then
 		echo "Creating user '${username}'..."
 
+		cp "passwd/${CONFIG_ADMIN}" "passwd/${username}"
 		htpasswd "passwd/${username}" "${username}"
 		mkdir -p "public_html/${username}/"
 
